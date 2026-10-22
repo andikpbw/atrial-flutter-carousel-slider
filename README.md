@@ -4,8 +4,11 @@
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/andikpbw/atrial-flutter-carousel-slider/blob/main/LICENSE)
 [![Flutter](https://img.shields.io/badge/Flutter-3.0+-02569B?logo=flutter)](https://flutter.dev)
 [![platform](https://img.shields.io/badge/platform-android%20|%20ios%20|%20web%20|%20macos%20|%20windows%20|%20linux-blue.svg)](https://pub.dev/packages/atrial_carousel_slider)
+[![Humanize AI](https://img.shields.io/badge/Powered%20by-Humanize%20AI-purple)](https://humanize.id)
 
 A modern, high-performance, and feature-rich Flutter carousel slider widget with 3D transitions, parallax effects, autoplay, indicators, and rich programmatic control.
+
+> 🌟 Supported & Powered by [Humanize AI](https://humanize.id)
 
 ---
 
@@ -43,7 +46,7 @@ Add `atrial_carousel_slider` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  atrial_carousel_slider: ^1.0.0
+  atrial_carousel_slider: ^1.0.1
 ```
 
 Or install it directly via CLI:
@@ -273,6 +276,12 @@ controller.pageNotifier.addListener(() {
 | `pauseAutoPlayOnHover` | `bool` | `true` | Pauses auto-play on mouse hover (desktop/web). |
 | `pageSnapping` | `bool` | `true` | Enables page snapping. |
 | `animateToClosest` | `bool` | `true` | Animates along the shortest path in infinite mode. |
+
+---
+
+## ❤️ Support & Credits
+
+Developed with care and supported by [Humanize AI](https://humanize.id).
 
 ---
 

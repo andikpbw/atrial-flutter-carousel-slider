@@ -1,3 +1,7 @@
+# 1.0.1
+
+- Updated documentation and badges with [Humanize AI](https://humanize.id) sponsorship & support link.
+
 # 1.0.0
 
 - Initial release of **atrial_carousel_slider** 🎉
