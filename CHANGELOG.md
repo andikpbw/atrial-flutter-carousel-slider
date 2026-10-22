@@ -1,0 +1,29 @@
+# 1.0.0
+
+- Initial release of **atrial_carousel_slider** 🎉
+- Modern, performant, and highly customizable carousel slider widget for Flutter.
+- Features:
+  - Infinite looping and bounded scroll modes.
+  - Smooth auto-play with pause-on-touch and pause-on-hover (desktop/web support).
+  - Center page enlargement (`enlargeCenterPage`) with multiple enlarge strategies (`scale`, `height`, `zoom`).
+  - Rich collection of built-in 3D and 2D slide transitions:
+    - `CubeSlideTransform` (3D Cube rotation)
+    - `ParallaxSlideTransform` (parallax depth movement)
+    - `AccordionSlideTransform`
+    - `ZoomOutSlideTransform`
+    - `DepthSlideTransform`
+    - `FlipSlideTransform` (3D card flip)
+    - `CardStackSlideTransform`
+    - Custom extensible `AtrialSlideTransform` interface.
+  - Modern indicator widget (`AtrialCarouselIndicator`) with diverse animation effects:
+    - `ExpandingDotsEffect`
+    - `WormIndicatorEffect`
+    - `SlideIndicatorEffect`
+    - `ScaleIndicatorEffect`
+    - `ColorTransitionEffect`
+  - Fully featured programmatic controller (`AtrialCarouselController`) with:
+    - `nextPage`, `previousPage`, `jumpToPage`, `animateToPage`
+    - `startAutoPlay`, `stopAutoPlay`
+    - `pageNotifier` and `scrollNotifier` listeners for real-time reactivity.
+  - Zero external third-party dependencies (pure Flutter framework).
+  - 100% test coverage and 0 lint warnings.

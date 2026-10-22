@@ -1,0 +1,28 @@
+name: atrial_carousel_slider
+description: A modern, high-performance, and feature-rich Flutter carousel slider widget with 3D transitions, parallax effects, autoplay, and indicators.
+version: 1.0.0
+homepage: https://github.com/andikpbw/atrial-flutter-carousel-slider
+repository: https://github.com/andikpbw/atrial-flutter-carousel-slider
+issue_tracker: https://github.com/andikpbw/atrial-flutter-carousel-slider/issues
+
+topics:
+  - carousel
+  - slider
+  - flutter-widget
+  - ui
+  - animation
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
