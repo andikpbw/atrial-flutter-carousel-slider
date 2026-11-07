@@ -25,6 +25,7 @@ A modern, high-performance, and feature-rich Flutter carousel slider widget with
   - `DepthSlideTransform` (Depth tuck effect)
   - `FlipSlideTransform` (3D card flip)
   - `CardStackSlideTransform` (Modern stacked cards)
+  - `CoverFlowSlideTransform` (Classic 3D CoverFlow tilt)
   - Extensible `AtrialSlideTransform` interface for custom transitions.
 - 🔘 **Interactive Indicators (`AtrialCarouselIndicator`)**:
   - `ExpandingDotsEffect` (Popular dynamic expanding pill)
@@ -46,7 +47,7 @@ Add `atrial_carousel_slider` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  atrial_carousel_slider: ^1.0.1
+  atrial_carousel_slider: ^1.0.2
 ```
 
 Or install it directly via CLI:
@@ -221,6 +222,14 @@ AtrialCarouselOptions(
 )
 ```
 
+### 3D CoverFlow Transform
+```dart
+AtrialCarouselOptions(
+  slideTransform: const CoverFlowSlideTransform(),
+  viewportFraction: 0.8,
+)
+```
+
 ---
 
 ## 🎮 Programmatic Controller (`AtrialCarouselController`)
@@ -240,6 +249,8 @@ controller.stopAutoPlay();
 
 // Read states
 int current = controller.currentPage;
+double offset = controller.currentOffset;
+bool playing = controller.isAutoPlaying;
 bool ready = controller.isReady;
 
 // Listen to page changes
@@ -275,6 +286,9 @@ controller.pageNotifier.addListener(() {
 | `pauseAutoPlayOnTouch` | `bool` | `true` | Pauses auto-play while touching/dragging. |
 | `pauseAutoPlayOnHover` | `bool` | `true` | Pauses auto-play on mouse hover (desktop/web). |
 | `pageSnapping` | `bool` | `true` | Enables page snapping. |
+| `padEnds` | `bool` | `true` | Adds padding to ends when `viewportFraction < 1.0`. |
+| `allowImplicitScrolling` | `bool` | `false` | Pre-builds adjacent slides for caching & accessibility. |
+| `pageViewKey` | `PageStorageKey<String>?` | `null` | Persists scroll position across rebuilds. |
 | `animateToClosest` | `bool` | `true` | Animates along the shortest path in infinite mode. |
 
 ---

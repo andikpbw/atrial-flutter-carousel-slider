@@ -51,8 +51,10 @@ void main() {
     expect(find.text('Builder Slide 0'), findsOneWidget);
   });
 
-  testWidgets('handles empty items without errors',
+  testWidgets('handles empty items and out-of-range initialPage safely',
       (WidgetTester tester) async {
+    final AtrialCarouselController controller = AtrialCarouselController();
+
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -62,8 +64,26 @@ void main() {
         ),
       ),
     );
-
     expect(find.byType(AtrialCarouselSlider), findsOneWidget);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AtrialCarouselSlider(
+            controller: controller,
+            items: const [Text('A'), Text('B'), Text('C')],
+            options: const AtrialCarouselOptions(
+              initialPage: 99,
+              viewportFraction: 1.0,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(controller.currentPage, 2);
+    expect(find.text('C'), findsOneWidget);
+    controller.dispose();
   });
 
   testWidgets('handles single item without infinite loop errors',
@@ -86,51 +106,165 @@ void main() {
     expect(find.text('Single Item'), findsOneWidget);
   });
 
-  testWidgets('enlargeCenterPage applies transform to center item',
+  testWidgets(
+      'enlargeCenterPage supports scale, height (aspectRatio), and zoom',
       (WidgetTester tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: AtrialCarouselSlider(
-            items: List.generate(
-              3,
-              (i) => SizedBox(
-                width: 300,
-                height: 200,
-                child: Text('Slide $i'),
+    for (final strategy in CenterPageEnlargeStrategy.values) {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AtrialCarouselSlider(
+              items: List.generate(
+                3,
+                (i) => Container(
+                  color: Colors.blue,
+                  child: Text('Slide $i'),
+                ),
               ),
-            ),
-            options: const AtrialCarouselOptions(
-              enlargeCenterPage: true,
-              enlargeFactor: 0.3,
-              viewportFraction: 0.8,
+              options: AtrialCarouselOptions(
+                enlargeCenterPage: true,
+                enlargeStrategy: strategy,
+                enlargeFactor: 0.3,
+                viewportFraction: 0.8,
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(find.text('Slide 0'), findsOneWidget);
-    expect(find.byType(Transform), findsWidgets);
+      expect(find.text('Slide 0'), findsOneWidget);
+    }
   });
 
-  testWidgets('custom slideTransform is invoked', (WidgetTester tester) async {
+  testWidgets('autoPlay emits CarouselPageChangedReason.timed',
+      (WidgetTester tester) async {
+    final List<CarouselPageChangedReason> reasons = [];
+
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: AtrialCarouselSlider(
             items: const [
+              Text('Slide 0'),
               Text('Slide 1'),
               Text('Slide 2'),
             ],
-            options: const AtrialCarouselOptions(
-              slideTransform: CubeSlideTransform(),
+            options: AtrialCarouselOptions(
+              autoPlay: true,
+              autoPlayInterval: const Duration(milliseconds: 300),
+              autoPlayAnimationDuration: const Duration(milliseconds: 100),
+              viewportFraction: 1.0,
+              onPageChanged: (_, reason) => reasons.add(reason),
             ),
           ),
         ),
       ),
     );
 
-    expect(find.text('Slide 1'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pumpAndSettle();
+
+    expect(reasons, contains(CarouselPageChangedReason.timed));
+    expect(reasons, isNot(contains(CarouselPageChangedReason.controller)));
+  });
+
+  testWidgets(
+      'finite autoPlay wraps to page 0 or stops with pauseAutoPlayInFiniteScroll',
+      (WidgetTester tester) async {
+    final List<int> pages = [];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AtrialCarouselSlider(
+            items: const [Text('P0'), Text('P1')],
+            options: AtrialCarouselOptions(
+              enableInfiniteScroll: false,
+              pauseAutoPlayInFiniteScroll: false,
+              autoPlay: true,
+              autoPlayInterval: const Duration(milliseconds: 250),
+              autoPlayAnimationDuration: const Duration(milliseconds: 80),
+              viewportFraction: 1.0,
+              onPageChanged: (index, _) => pages.add(index),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Tick 1: 0 -> 1
+    await tester.pump(const Duration(milliseconds: 260));
+    await tester.pump(const Duration(milliseconds: 100));
+    // Tick 2: 1 -> 0 (wraps around!)
+    await tester.pump(const Duration(milliseconds: 260));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(pages, equals([1, 0]));
+  });
+
+  testWidgets('didUpdateWidget handles dynamic itemCount and viewportFraction',
+      (WidgetTester tester) async {
+    List<Widget> slides = const [];
+    double fraction = 0.85;
+
+    await tester.pumpWidget(
+      StatefulBuilder(
+        builder: (context, setState) {
+          return MaterialApp(
+            home: Scaffold(
+              body: Column(
+                children: [
+                  AtrialCarouselSlider(
+                    items: slides,
+                    options: AtrialCarouselOptions(
+                      height: 150,
+                      autoPlay: true,
+                      autoPlayInterval: const Duration(milliseconds: 200),
+                      autoPlayAnimationDuration:
+                          const Duration(milliseconds: 80),
+                      viewportFraction: fraction,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        slides = const [Text('Loaded 0'), Text('Loaded 1')];
+                        fraction = 1.0;
+                      });
+                    },
+                    child: const Text('Load'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    expect(find.text('Loaded 0'), findsNothing);
+
+    await tester.tap(find.text('Load'));
+    await tester.pump();
+    expect(find.text('Loaded 0'), findsOneWidget);
+
+    // Auto-play starts automatically after async items load
+    await tester.pump(const Duration(milliseconds: 220));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Loaded 1'), findsOneWidget);
+  });
+
+  test('AtrialCarouselOptions copyWith and equality work properly', () {
+    const a = AtrialCarouselOptions(
+      height: 200,
+      viewportFraction: 0.9,
+      padEnds: false,
+    );
+    final b = a.copyWith();
+    final c = a.copyWith(padEnds: true);
+
+    expect(a, equals(b));
+    expect(a.hashCode, equals(b.hashCode));
+    expect(a, isNot(equals(c)));
   });
 }

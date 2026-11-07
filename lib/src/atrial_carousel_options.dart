@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
+import 'atrial_carousel_slider.dart';
 import 'enums/carousel_page_changed_reason.dart';
 import 'enums/enlarge_strategy.dart';
+import 'transforms/builtin_transforms.dart';
 import 'transforms/slide_transform.dart';
 
 /// Callback invoked when the current page changes.
@@ -59,7 +61,8 @@ class AtrialCarouselOptions {
   /// Strategy used to enlarge the center slide. Defaults to [CenterPageEnlargeStrategy.scale].
   final CenterPageEnlargeStrategy enlargeStrategy;
 
-  /// Optional custom slide transform effect (e.g. [CubeSlideTransform], [ParallaxSlideTransform], [AccordionSlideTransform]).
+  /// Optional custom slide transform effect (e.g. [CubeSlideTransform],
+  /// [ParallaxSlideTransform], [AccordionSlideTransform], [CoverFlowSlideTransform]).
   final AtrialSlideTransform? slideTransform;
 
   /// Callback fired when the active page changes.
@@ -86,6 +89,19 @@ class AtrialCarouselOptions {
   /// Whether snapping to pages is enabled. Defaults to `true`.
   final bool pageSnapping;
 
+  /// Whether to add padding to both ends of the list when [viewportFraction] < 1.0.
+  ///
+  /// Defaults to `true` (centering the active slide). Set to `false` to align
+  /// slides to the leading edge.
+  final bool padEnds;
+
+  /// Whether adjacent off-screen slides should be implicitly built for pre-caching
+  /// and accessibility scrolling. Defaults to `false`.
+  final bool allowImplicitScrolling;
+
+  /// Optional [PageStorageKey] used to persist scroll offset across rebuilds.
+  final PageStorageKey<String>? pageViewKey;
+
   /// The clipping behavior for the carousel viewport. Defaults to [Clip.antiAlias].
   final Clip clipBehavior;
 
@@ -95,6 +111,7 @@ class AtrialCarouselOptions {
   /// Whether to animate to the closest page index when navigating in infinite mode. Defaults to `true`.
   final bool animateToClosest;
 
+  /// Creates configuration options for [AtrialCarouselSlider].
   const AtrialCarouselOptions({
     this.height,
     this.aspectRatio = 16 / 9,
@@ -118,10 +135,22 @@ class AtrialCarouselOptions {
     this.pauseAutoPlayOnHover = true,
     this.pauseAutoPlayInFiniteScroll = false,
     this.pageSnapping = true,
+    this.padEnds = true,
+    this.allowImplicitScrolling = false,
+    this.pageViewKey,
     this.clipBehavior = Clip.antiAlias,
     this.padding = EdgeInsets.zero,
     this.animateToClosest = true,
-  });
+  })  : assert(height == null || height > 0.0, 'height must be > 0.0'),
+        assert(aspectRatio > 0.0, 'aspectRatio must be > 0.0'),
+        assert(
+          viewportFraction > 0.0 && viewportFraction <= 1.0,
+          'viewportFraction must be in (0.0, 1.0]',
+        ),
+        assert(
+          enlargeFactor >= 0.0 && enlargeFactor <= 1.0,
+          'enlargeFactor must be in [0.0, 1.0]',
+        );
 
   /// Creates a copy of this [AtrialCarouselOptions] with the given fields replaced.
   AtrialCarouselOptions copyWith({
@@ -147,6 +176,9 @@ class AtrialCarouselOptions {
     bool? pauseAutoPlayOnHover,
     bool? pauseAutoPlayInFiniteScroll,
     bool? pageSnapping,
+    bool? padEnds,
+    bool? allowImplicitScrolling,
+    PageStorageKey<String>? pageViewKey,
     Clip? clipBehavior,
     EdgeInsetsGeometry? padding,
     bool? animateToClosest,
@@ -176,9 +208,79 @@ class AtrialCarouselOptions {
       pauseAutoPlayInFiniteScroll:
           pauseAutoPlayInFiniteScroll ?? this.pauseAutoPlayInFiniteScroll,
       pageSnapping: pageSnapping ?? this.pageSnapping,
+      padEnds: padEnds ?? this.padEnds,
+      allowImplicitScrolling:
+          allowImplicitScrolling ?? this.allowImplicitScrolling,
+      pageViewKey: pageViewKey ?? this.pageViewKey,
       clipBehavior: clipBehavior ?? this.clipBehavior,
       padding: padding ?? this.padding,
       animateToClosest: animateToClosest ?? this.animateToClosest,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AtrialCarouselOptions &&
+        other.height == height &&
+        other.aspectRatio == aspectRatio &&
+        other.viewportFraction == viewportFraction &&
+        other.initialPage == initialPage &&
+        other.enableInfiniteScroll == enableInfiniteScroll &&
+        other.reverse == reverse &&
+        other.autoPlay == autoPlay &&
+        other.autoPlayInterval == autoPlayInterval &&
+        other.autoPlayAnimationDuration == autoPlayAnimationDuration &&
+        other.autoPlayCurve == autoPlayCurve &&
+        other.enlargeCenterPage == enlargeCenterPage &&
+        other.enlargeFactor == enlargeFactor &&
+        other.enlargeStrategy == enlargeStrategy &&
+        other.slideTransform == slideTransform &&
+        other.onPageChanged == onPageChanged &&
+        other.onScrolled == onScrolled &&
+        other.scrollPhysics == scrollPhysics &&
+        other.scrollDirection == scrollDirection &&
+        other.pauseAutoPlayOnTouch == pauseAutoPlayOnTouch &&
+        other.pauseAutoPlayOnHover == pauseAutoPlayOnHover &&
+        other.pauseAutoPlayInFiniteScroll == pauseAutoPlayInFiniteScroll &&
+        other.pageSnapping == pageSnapping &&
+        other.padEnds == padEnds &&
+        other.allowImplicitScrolling == allowImplicitScrolling &&
+        other.pageViewKey == pageViewKey &&
+        other.clipBehavior == clipBehavior &&
+        other.padding == padding &&
+        other.animateToClosest == animateToClosest;
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+        height,
+        aspectRatio,
+        viewportFraction,
+        initialPage,
+        enableInfiniteScroll,
+        reverse,
+        autoPlay,
+        autoPlayInterval,
+        autoPlayAnimationDuration,
+        autoPlayCurve,
+        enlargeCenterPage,
+        enlargeFactor,
+        enlargeStrategy,
+        slideTransform,
+        onPageChanged,
+        onScrolled,
+        scrollPhysics,
+        scrollDirection,
+        pauseAutoPlayOnTouch,
+        pauseAutoPlayOnHover,
+        pauseAutoPlayInFiniteScroll,
+        pageSnapping,
+        padEnds,
+        allowImplicitScrolling,
+        pageViewKey,
+        clipBehavior,
+        padding,
+        animateToClosest,
+      ]);
 }

@@ -1,11 +1,15 @@
-/// The strategy used to enlarge the center item when [enlargeCenterPage] is enabled.
+import '../atrial_carousel_options.dart';
+import 'package:flutter/widgets.dart';
+
+/// The strategy used to enlarge the center item when
+/// [AtrialCarouselOptions.enlargeCenterPage] is enabled.
 enum CenterPageEnlargeStrategy {
-  /// Enlarges the center item using [Transform.scale].
+  /// Enlarges the center item uniformly using [Transform.scale].
   scale,
 
-  /// Adjusts the height proportionally.
+  /// Adjusts the cross-axis size proportionally to the viewport.
   height,
 
-  /// Enlarges the item with center zoom alignment.
+  /// Enlarges the center item while aligning side items inward toward the center.
   zoom,
 }

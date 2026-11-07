@@ -3,9 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:atrial_carousel_slider/atrial_carousel_slider.dart';
 
 void main() {
-  testWidgets('controller animates and jumps to pages',
+  testWidgets('controller animates, jumps, and reports accurate reasons',
       (WidgetTester tester) async {
     final AtrialCarouselController controller = AtrialCarouselController();
+    final List<(int, CarouselPageChangedReason)> events = [];
 
     await tester.pumpWidget(
       MaterialApp(
@@ -20,9 +21,10 @@ void main() {
                 child: Text('Slide $i'),
               ),
             ),
-            options: const AtrialCarouselOptions(
+            options: AtrialCarouselOptions(
               viewportFraction: 1.0,
               enableInfiniteScroll: false,
+              onPageChanged: (index, reason) => events.add((index, reason)),
             ),
           ),
         ),
@@ -32,23 +34,76 @@ void main() {
     expect(controller.isReady, isTrue);
     expect(controller.currentPage, 0);
 
-    // Jump to page 2
-    controller.jumpToPage(2);
+    // Multi-page animateToPage reports controller reason for every crossed page
+    final Future<void> animFuture = controller.animateToPage(
+      3,
+      duration: const Duration(milliseconds: 150),
+    );
     await tester.pumpAndSettle();
-    expect(controller.currentPage, 2);
-    expect(find.text('Slide 2'), findsOneWidget);
-
-    // Next page
-    controller.nextPage(duration: const Duration(milliseconds: 100));
-    await tester.pumpAndSettle();
+    await animFuture;
     expect(controller.currentPage, 3);
-    expect(find.text('Slide 3'), findsOneWidget);
+    expect(
+      events.every((e) => e.$2 == CarouselPageChangedReason.controller),
+      isTrue,
+    );
 
-    // Previous page
-    controller.previousPage(duration: const Duration(milliseconds: 100));
+    // Jump to page 1
+    controller.jumpToPage(1);
     await tester.pumpAndSettle();
+    expect(controller.currentPage, 1);
+    expect(find.text('Slide 1'), findsOneWidget);
+
+    // Next & previous page
+    final Future<void> nextFuture =
+        controller.nextPage(duration: const Duration(milliseconds: 80));
+    await tester.pumpAndSettle();
+    await nextFuture;
     expect(controller.currentPage, 2);
-    expect(find.text('Slide 2'), findsOneWidget);
+
+    final Future<void> prevFuture =
+        controller.previousPage(duration: const Duration(milliseconds: 80));
+    await tester.pumpAndSettle();
+    await prevFuture;
+    expect(controller.currentPage, 1);
+
+    controller.dispose();
+    expect(controller.isDisposed, isTrue);
+    expect(controller.isReady, isFalse);
+  });
+
+  testWidgets(
+      'controller startAutoPlay works even when options.autoPlay is initially false',
+      (WidgetTester tester) async {
+    final AtrialCarouselController controller = AtrialCarouselController();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AtrialCarouselSlider(
+            controller: controller,
+            items: const [Text('S0'), Text('S1'), Text('S2')],
+            options: const AtrialCarouselOptions(
+              autoPlay: false,
+              autoPlayInterval: Duration(milliseconds: 200),
+              autoPlayAnimationDuration: Duration(milliseconds: 80),
+              viewportFraction: 1.0,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(controller.isAutoPlaying, isFalse);
+
+    controller.startAutoPlay();
+    expect(controller.isAutoPlaying, isTrue);
+
+    await tester.pump(const Duration(milliseconds: 220));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(controller.currentPage, 1);
+
+    controller.stopAutoPlay();
+    expect(controller.isAutoPlaying, isFalse);
 
     controller.dispose();
   });

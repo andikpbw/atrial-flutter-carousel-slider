@@ -25,6 +25,7 @@ class AtrialCarouselIndicator extends StatelessWidget {
   /// Padding around the indicator.
   final EdgeInsetsGeometry padding;
 
+  /// Creates an [AtrialCarouselIndicator].
   const AtrialCarouselIndicator({
     super.key,
     required this.count,
@@ -67,16 +68,22 @@ class AtrialCarouselIndicator extends StatelessWidget {
         painterWidget = GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapUp: (details) {
-            final double tapPos = axis == Axis.horizontal
-                ? details.localPosition.dx
-                : details.localPosition.dy;
-            final double total = axis == Axis.horizontal
-                ? indicatorSize.width
-                : indicatorSize.height;
-            final double ratio = (tapPos / total).clamp(0.0, 0.999);
-            final int targetIndex = (ratio * count).floor();
-            onDotClicked?.call(targetIndex);
+            final int targetIndex = effect.hitTestDots(
+              details.localPosition.dx,
+              count,
+              progress,
+            );
+            if (targetIndex >= 0 && targetIndex < count) {
+              onDotClicked?.call(targetIndex);
+            }
           },
+          child: painterWidget,
+        );
+      }
+
+      if (axis == Axis.vertical) {
+        painterWidget = RotatedBox(
+          quarterTurns: 1,
           child: painterWidget,
         );
       }
@@ -91,14 +98,14 @@ class AtrialCarouselIndicator extends StatelessWidget {
       return ValueListenableBuilder<double>(
         valueListenable: controller!.scrollNotifier,
         builder: (context, offset, _) {
-          // Normalize offset to 0..count
-          final double progress = (offset % count + count) % count;
+          final double progress = ((offset % count) + count) % count;
           return buildCustomPaint(progress);
         },
       );
     }
 
-    return buildCustomPaint(currentIndex.toDouble());
+    final int safeIndex = currentIndex.clamp(0, count - 1);
+    return buildCustomPaint(safeIndex.toDouble());
   }
 }
 
@@ -107,7 +114,7 @@ class _IndicatorPainter extends CustomPainter {
   final int count;
   final double progress;
 
-  _IndicatorPainter({
+  const _IndicatorPainter({
     required this.effect,
     required this.count,
     required this.progress,

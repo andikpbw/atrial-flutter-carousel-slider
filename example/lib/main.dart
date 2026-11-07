@@ -171,7 +171,27 @@ class _CarouselShowcasePageState extends State<CarouselShowcasePage> {
               },
             ),
             const SizedBox(height: 32),
-            _buildSectionHeader('4. Worm Indicator Effect'),
+            _buildSectionHeader('4. 3D CoverFlow Transform'),
+            const SizedBox(height: 12),
+            AtrialCarouselSlider.builder(
+              itemCount: _slides.length,
+              options: const AtrialCarouselOptions(
+                height: 180,
+                viewportFraction: 0.78,
+                slideTransform: CoverFlowSlideTransform(),
+              ),
+              itemBuilder: (context, index) {
+                final slide = _slides[index];
+                return _buildCard(
+                  title: slide['title'] as String,
+                  subtitle: slide['subtitle'] as String,
+                  gradient: slide['gradient'] as List<Color>,
+                  icon: slide['icon'] as IconData,
+                );
+              },
+            ),
+            const SizedBox(height: 32),
+            _buildSectionHeader('5. Worm Indicator Effect'),
             const SizedBox(height: 12),
             Center(
               child: ValueListenableBuilder<int>(
